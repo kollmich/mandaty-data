@@ -1,9 +1,10 @@
+from variables import *
 import csv
 import psycopg2
 
 csv_path = 'Src/Polls/Focus/focus_data_20200126.csv'
 
-conn = psycopg2.connect("host=35.195.243.9 dbname=mandaty user=miso password=KbwZWxZ7TdJXJBpf")
+conn = psycopg2.connect("host=35.195.243.9 dbname=mandaty user=miso password={variables.password}")
 cur = conn.cursor()
 
 with open(csv_path, 'r') as f:
