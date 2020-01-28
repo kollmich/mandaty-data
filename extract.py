@@ -10,7 +10,8 @@ try:
     cur = conn.cursor()
 
     fout = open(csv_path, 'w')
-    cur.copy_to(fout, "test", sep=',')
+    cur.copy_to(fout, "visualisation", sep=',')
+    #cur.execute(f'''COPY visualisation TO '{csv_path}' USING DELIMITERS ',' WITH CSV;''')
 
 except psycopg2.DatabaseError as e:
 
