@@ -3,25 +3,24 @@ import csv
 import psycopg2
 import sys
 from pandas import read_csv
+import time
 
-csv_path = 'output/data_mandaty.csv'
-csv_path2 = 'output/data_politicians.csv'
+csv_path = 'output/data_politicians.csv'
 
 try:
     conn = psycopg2.connect(f"host={host} dbname=mandaty user=miso password={password}")
     cur = conn.cursor()
 
     fout = open(csv_path, 'w')
-    cur.copy_to(fout, "visualisation", sep=',')
+    cur.copy_to(fout, "popularity", sep=',')
+    # cur2.copy_expert("COPY popularity TO fout2 WITH CSV HEADER", fout2)
     #cur.execute(f'''COPY view_visualisation_2 TO STDOUT '{csv_path}' USING DELIMITERS ',' WITH CSV;''')
 
-    df = read_csv(csv_path, sep=',')
-    df.columns = ['result_id', 'poll_date', 'poll_agency', 'party_shortname', 'poll_result', 'moving_average']
-    df.to_csv(csv_path, sep=',')
+    # time.sleep(1)
 
-    df2 = read_csv(csv_path2, sep=',')
-    df2.columns = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'agency_id', 'party_shortname']
-    df2.to_csv(csv_path2, sep=',')
+    # df = read_csv('output/data_politicians.csv', sep=',')
+    # df.columns = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'agency_id', 'party_shortname']
+    # df.to_csv(csv_path, sep=',')
 
 except psycopg2.DatabaseError as e:
 
@@ -40,4 +39,3 @@ finally:
 
     if fout:
         fout.close()
-

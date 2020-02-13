@@ -6,11 +6,13 @@ clean-dir:
 
 copy-data:
 	cp output/data_mandaty.csv	/Users/michalkollar/Desktop/Coding/Dataviz/mandaty-web/src/assets/data/
+	cp output/data_politicians.csv	/Users/michalkollar/Desktop/Coding/Dataviz/mandaty-web/src/assets/data/
 
 go:
 	make clean-dir
 
 	python3 load.py
+	python3 extract0.py
 	python3 extract.py
 
 	make copy-data
