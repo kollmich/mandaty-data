@@ -12,7 +12,6 @@ go:
 	make clean-dir
 
 	python3 load.py
-	python3 extract0.py
 	python3 extract.py
 
 	make copy-data

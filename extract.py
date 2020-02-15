@@ -3,41 +3,45 @@ import csv
 import psycopg2
 import sys
 from pandas import read_csv
+import pandas as pd
 
-csv_path = 'output/data_mandaty.csv'
-csv_path2 = 'output/data_politicians.csv'
+csv_path_1 = 'output/data_mandaty.csv'
+csv_path_2 = 'output/data_politicians.csv'
+file_paths = [csv_path_1, csv_path_2]
 
-try:
-    conn = psycopg2.connect(f"host={host} dbname=mandaty user=miso password={password}")
-    cur = conn.cursor()
+input_db_1 = 'visualisation'
+input_db_2 = 'popularity'
+input_dbs = [input_db_1, input_db_2]
 
-    fout = open(csv_path, 'w')
-    cur.copy_to(fout, "visualisation", sep=',')
-    #cur.execute(f'''COPY view_visualisation_2 TO STDOUT '{csv_path}' USING DELIMITERS ',' WITH CSV;''')
+conn = psycopg2.connect(f"host={host} dbname=mandaty user=miso password={password}")
+cur = conn.cursor()
 
-    df = read_csv(csv_path, sep=',')
-    df.columns = ['result_id', 'poll_date', 'poll_agency', 'party_shortname', 'poll_result', 'moving_average']
-    df.to_csv(csv_path, sep=',')
+for i,j in zip(range(0,len(file_paths)), range(0, len(input_dbs))):
+    try:
+        fout = open(file_paths[i], 'w')
+        cur.copy_to(fout, input_dbs[j], sep=',')
 
-    df2 = read_csv(csv_path2, sep=',')
-    df2.columns = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'agency_id', 'party_shortname']
-    df2.to_csv(csv_path2, sep=',')
+    except psycopg2.DatabaseError as e:
 
-except psycopg2.DatabaseError as e:
+        print(f'Error {e}')
+        sys.exit(1)
 
-    print(f'Error {e}')
-    sys.exit(1)
+    except IOError as e:
 
-except IOError as e:
+        print(f'Error {e}')
+        sys.exit(1)
 
-    print(f'Error {e}')
-    sys.exit(1)
+    finally:
+        if fout:
+            fout.close()
 
-finally:
+if conn:
+    conn.close()
 
-    if conn:
-        conn.close()
+columns_mandaty = ['result_id', 'poll_date', 'poll_agency', 'party_shortname', 'poll_result', 'moving_average']
+columns_popularity = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'agency_id', 'party_shortname']
+columns_list = [columns_mandaty, columns_popularity]
 
-    if fout:
-        fout.close()
-
+for i,j in zip(range(0,len(file_paths)), range(0,len(columns_list))):
+    df = read_csv(file_paths[i], sep=',', names=columns_list[j])
+    df.to_csv(file_paths[i], sep=',')
