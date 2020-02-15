@@ -44,4 +44,9 @@ columns_list = [columns_mandaty, columns_popularity]
 
 for i,j in zip(range(0,len(file_paths)), range(0,len(columns_list))):
     df = read_csv(file_paths[i], sep=',', names=columns_list[j])
-    df.to_csv(file_paths[i], sep=',')
+    df.to_csv(file_paths[i], sep=',', index=False)
+
+df = read_csv(file_paths[0],sep=',')
+relevant_parties = df[(df['poll_date'] == max(df['poll_date'])) & df['poll_result'] >= 0.02 ].party_shortname
+df = df[df.party_shortname.isin(relevant_parties)]
+df.to_csv(file_paths[0], sep=',', index=False)
