@@ -9,11 +9,11 @@ csv_path_1 = 'output/data_mandaty.csv'
 csv_path_2 = 'output/data_politicians.csv'
 file_paths = [csv_path_1, csv_path_2]
 
-input_db_1 = 'visualisation'
-input_db_2 = 'popularity'
+input_db_1 = 'party_polls'
+input_db_2 = 'popularity_polls'
 input_dbs = [input_db_1, input_db_2]
 
-conn = psycopg2.connect(f"host={host} dbname=mandaty user=miso password={password}")
+conn = psycopg2.connect(f"host={host_aws} dbname={dbname_aws} user={user_aws} password={password_aws}")
 cur = conn.cursor()
 
 for i,j in zip(range(0,len(file_paths)), range(0, len(input_dbs))):
@@ -38,8 +38,8 @@ for i,j in zip(range(0,len(file_paths)), range(0, len(input_dbs))):
 if conn:
     conn.close()
 
-columns_mandaty = ['result_id', 'poll_date', 'poll_agency', 'party_shortname', 'poll_result', 'moving_average']
-columns_popularity = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'agency_id', 'party_shortname']
+columns_mandaty = ['poll_date', 'poll_agency', 'party_shortname', 'result']
+columns_popularity = ['poll_date', 'politician', 'party_id', 'approval', 'disapproval', 'party_shortname']
 columns_list = [columns_mandaty, columns_popularity]
 
 for i,j in zip(range(0,len(file_paths)), range(0,len(columns_list))):

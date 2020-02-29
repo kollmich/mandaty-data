@@ -1,26 +1,70 @@
+from variables import *
+import csv
+import psycopg2
+import sys
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import io
 
+# connect to the Google spreadsheet
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('mandates-023705ca838d.json', scope)
 client = gspread.authorize(creds)
 worksheets = client.open('mandates-data').worksheets()
-print(worksheets)
 
+# fetch party poll data
 parties_sheet = client.open('mandates-data').worksheet('parties')
-
 mandates = parties_sheet.get_all_records()
-
 parties = pd.DataFrame.from_records(mandates)
 
-print(parties)
-
-
+# fetch popularity poll data
 popularity_sheet = client.open('mandates-data').worksheet('popularity')
-
 politicians = popularity_sheet.get_all_records()
-
 popularity = pd.DataFrame.from_records(politicians)
 
-print(popularity)
+# load to postgres db
+try:
+    conn = psycopg2.connect(f"host={host_aws} dbname={dbname_aws} user={user_aws} password={password_aws}")
+    cur = conn.cursor()
+
+    # parties buffer
+    party_buf = io.StringIO()
+    parties.to_csv(party_buf, index=False, header=False)
+    party_buf.seek(0)
+    cur.execute('truncate table party_polls')
+    cur.copy_from(party_buf, "party_polls", sep=',')
+    conn.commit()
+
+    # popularity buffer
+    pop_buf = io.StringIO()
+    popularity.to_csv(pop_buf, index=False, header=False)
+    pop_buf.seek(0)
+    cur.execute('truncate table popularity_polls')
+    cur.copy_from(pop_buf, "popularity_polls", sep=',')
+    conn.commit()
+
+
+except psycopg2.DatabaseError as e:
+
+    if conn:
+        conn.rollback()
+
+    print(f'Error {e}')
+    sys.exit(1)
+
+except IOError as e:
+
+    if conn:
+        conn.rollback()
+
+    print(f'Error {e}')
+    sys.exit(1)
+
+finally:
+
+    if conn:
+        conn.close()
+
+    # if f:
+    #     f.close()
