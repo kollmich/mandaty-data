@@ -44,7 +44,6 @@ try:
     cur.copy_from(pop_buf, "popularity_polls", sep=',')
     conn.commit()
 
-
 except psycopg2.DatabaseError as e:
 
     if conn:
@@ -66,5 +65,8 @@ finally:
     if conn:
         conn.close()
 
-    # if f:
-    #     f.close()
+    if pop_buf:
+        pop_buf.close()
+
+    if party_buf :
+        party_buf.close()
