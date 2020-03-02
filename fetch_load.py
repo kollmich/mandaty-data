@@ -17,11 +17,38 @@ worksheets = client.open('mandates-data').worksheets()
 parties_sheet = client.open('mandates-data').worksheet('parties')
 mandates = parties_sheet.get_all_records()
 parties = pd.DataFrame.from_records(mandates)
+parties['mov_avg'] = parties.groupby('party_shortname')['result'].transform(lambda x: x.rolling(5, 1).mean())
+subset = parties[(parties['poll_date'] == parties['poll_date'].max()) & (((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05)))]
+# print(parties)
+# print(subset)
+# print(subset['result'].transform(lambda x: x*10000).astype('int64'))
+
+print(subset)
+
+total_seats = 150
+
+def dhondt_formula(votes, seats):
+    return votes / (seats + 1)
+
+dist = subset[['party_shortname','result']]
+dist['mandates'] = 0
+print(dist)
+print(dist[dist['result'] == dist['result'].max()])
+
+for i in range(0, total_seats):
+    dist['quot'] = dist['result'] / (dist['mandates'] + 1)
+    index = dist['quot'].idxmax(axis=0, skipna=True)
+    dist['mandates'][index] += 1
+    # dist['result'][index] = dist['result'][index] / (dist['mandates'][index] + 1)
+    # print(dist['result'][index])
+    print(dist)
+
 
 # fetch popularity poll data
 popularity_sheet = client.open('mandates-data').worksheet('popularity')
 politicians = popularity_sheet.get_all_records()
 popularity = pd.DataFrame.from_records(politicians)
+
 
 # load to postgres db
 try:
