@@ -22,35 +22,38 @@ mandates = parties_sheet.get_all_records()
 parties = pd.DataFrame.from_records(mandates)
 parties['mov_avg'] = parties.groupby('party_shortname')['result'].transform(lambda x: x.rolling(5, 1).mean())
 parties['seats'] = 0
+parties['quot'] = 0
 print(parties)
 winners = parties[((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05))]
 losers = parties[((parties['coalition'] == 1) & (parties['result'] < 0.07)) | ((parties['coalition'] == 0) & (parties['result'] < 0.05))]
 #(parties['poll_date'] == parties['poll_date'].max()) & 
-grouped = winners.groupby(['poll_date','agency'])
+groups = winners.groupby(['poll_date','agency'])
 
-# for i in len(num_polls.index)
-def distribute_seats(gr):
+def distribute_seats(group):
     x = 0
     while x < 150: # i in range(0, total_seats):
-        # subset = parties[(((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05)))]
-        # subset['quot'] = subset['result'] / (subset['seats'] + 1)
-        # index = subset['quot'].idxmax(axis=0, skipna=True)
-        # subset['seats'][index] += 1
-        # print(subset)
-        gr['quot'] = gr['result'] / (gr['seats'] + 1)
-        index = gr['quot'].idxmax(axis=0, skipna=True)
-        gr['seats'][index] += 1
+        group['quot'] = group['result'] / (group['seats'] + 1)
+        index = group['quot'].idxmax(axis=0, skipna=True)
+        group['seats'][index] += 1
         x += 1
 
-grouped.apply(func=distribute_seats)
-# grouped.reset_index(inplace=True)
-# grouped.drop(['quot'], axis=1, inplace=True)
-print(winners)
-print(grouped)
-# print(winners)
-print(losers)
+new = pd.DataFrame(columns=['poll_date','agency', 'party_shortname', 'result', 'coalition', 'mov_avg', 'seats', 'quot'])
 
-# parties = grouped.append([losers])
+for group_name, group in groups:
+    distribute_seats(group)
+    new = new.append(group)
+    # appended_data.append(data)
+    print(group)
+    # print(new)
+
+# appended_data.append(data)
+
+print(new)
+
+parties = new.append(losers).drop('quot', axis=1)
+
+print(parties)
+
 
 # # fetch popularity poll data
 # popularity_sheet = client.open('mandates-data').worksheet('popularity')
