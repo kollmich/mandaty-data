@@ -6,8 +6,6 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import io
 
-# Number of seats in parliament
-total_seats = 150
 
 # Connect to the Google spreadsheet
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']

@@ -22,7 +22,6 @@ parties = pd.DataFrame.from_records(mandates)
 parties['mov_avg'] = parties.groupby('party_shortname')['result'].transform(lambda x: x.rolling(5, 1).mean())
 parties['seats'] = 0
 parties['quot'] = 0
-print(parties)
 winners = parties[((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05))]
 losers = parties[((parties['coalition'] == 1) & (parties['result'] < 0.07)) | ((parties['coalition'] == 0) & (parties['result'] < 0.05))]
 winners_grouped = winners.groupby(['poll_date','agency'])
