@@ -1,22 +1,21 @@
 from variables import *
-import csv
-import psycopg2
 import sys
+import psycopg2
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import io
 
-#number of seats in parliament
+# Number of seats in parliament
 total_seats = 150
 
-# connect to the Google spreadsheet
+# Connect to the Google spreadsheet
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('mandates-023705ca838d.json', scope)
 client = gspread.authorize(creds)
 worksheets = client.open('mandates-data').worksheets()
 
-# fetch party poll data
+# Fetch party poll data
 parties_sheet = client.open('mandates-data').worksheet('parties')
 mandates = parties_sheet.get_all_records()
 parties = pd.DataFrame.from_records(mandates)
@@ -26,9 +25,9 @@ parties['quot'] = 0
 print(parties)
 winners = parties[((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05))]
 losers = parties[((parties['coalition'] == 1) & (parties['result'] < 0.07)) | ((parties['coalition'] == 0) & (parties['result'] < 0.05))]
-#(parties['poll_date'] == parties['poll_date'].max()) & 
-groups = winners.groupby(['poll_date','agency'])
+winners_grouped = winners.groupby(['poll_date','agency'])
 
+# Define function and distribute each seat according to the d'Hondt method
 def distribute_seats(group):
     x = 0
     while x < 150: # i in range(0, total_seats):
@@ -39,29 +38,14 @@ def distribute_seats(group):
 
 new = pd.DataFrame(columns=['poll_date','agency', 'party_shortname', 'result', 'coalition', 'mov_avg', 'seats', 'quot'])
 
-for group_name, group in groups:
+for group_name, group in winners_grouped:
     distribute_seats(group)
     new = new.append(group)
-    # appended_data.append(data)
-    print(group)
-    # print(new)
 
-# appended_data.append(data)
-
-print(new)
-
-parties = new.append(losers).drop('quot', axis=1)
-
-print(parties)
+parties = new.append(losers).drop('quot', axis=1).sort_values(by=['seats'], ascending=False).sort_values(by=['poll_date', 'agency'])
 
 
-# # fetch popularity poll data
-# popularity_sheet = client.open('mandates-data').worksheet('popularity')
-# politicians = popularity_sheet.get_all_records()
-# popularity = pd.DataFrame.from_records(politicians)
-
-
-# load to postgres db
+# Load to postgres db
 try:
     conn = psycopg2.connect(f"host={host_aws} dbname={dbname_aws} user={user_aws} password={password_aws}")
     cur = conn.cursor()
@@ -74,14 +58,7 @@ try:
     cur.copy_from(party_buf, "party_polls", sep=',')
     conn.commit()
 
-    # # popularity buffer
-    # pop_buf = io.StringIO()
-    # popularity.to_csv(pop_buf, index=False, header=False)
-    # pop_buf.seek(0)
-    # cur.execute('truncate table popularity_polls')
-    # cur.copy_from(pop_buf, "popularity_polls", sep=',')
-    # conn.commit()
-
+# Close connections
 except psycopg2.DatabaseError as e:
 
     if conn:
@@ -102,9 +79,6 @@ finally:
 
     if conn:
         conn.close()
-
-    # if pop_buf:
-    #     pop_buf.close()
 
     if party_buf :
         party_buf.close()

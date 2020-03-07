@@ -1,1 +1,17 @@
-poll_date,politician,party_id,approval,disapproval,agency_id,party_shortname
+poll_date,politician,approval,disapproval,party_shortname
+2020-01-20,Zuzana Čaputová,0.58,0.39,Independent
+2020-01-20,Róbert Fico,0.19,0.78,SMER
+2020-01-20,Andrej Danko,0.22,0.76,SMER
+2020-01-20,Andrej Kiska,0.29,0.69,ZA ĽUDÍ
+2020-01-20,Igor Matovič,0.29,0.69,OĽaNO
+2020-01-20,Boris Kollár,0.28,0.69,SME RODINA
+2020-01-20,Michal Truban,0.27,0.68,PS/Spolu
+2020-01-20,Miroslav Beblavý,0.22,0.73,PS/Spolu
+2020-01-20,Tomáš Drucker,0.26,0.67,DOBRÁ VOĽBA
+2020-01-20,Marian Kotleba,0.22,0.76,ĽSNS
+2020-01-20,Richard Sulík,0.2,0.77,SaS
+2020-01-20,Štefan Harabin,0.15,0.82,VLASŤ
+2020-01-20,Alojz Hlina,0.14,0.81,KDH
+2020-01-20,Béla Bugár,0.14,0.84,MOST - HÍD
+2020-01-20,Guyla Bárdos,0.08,0.75,MKP
+2020-01-20,Peter Pellegrini,0.39,0.59,SMER

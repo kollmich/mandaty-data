@@ -11,7 +11,8 @@ copy-data:
 go:
 	make clean-dir
 
-	python3 load.py
-	python3 extract.py
+	python3 fetch_load_parties.py
+	python3 fetch_load_popularity.py
+	python3 extract_all.py
 
 	make copy-data
