@@ -6,7 +6,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import io
 
-# Number of seats in parliament
+# Set number of seats in parliament
 total_seats = 150
 
 # Connect to the Google spreadsheet
@@ -29,7 +29,7 @@ winners_grouped = winners.groupby(['poll_date','agency'])
 # Define function and distribute each seat according to the d'Hondt method
 def distribute_seats(group):
     x = 0
-    while x < 150: # i in range(0, total_seats):
+    while x < total_seats: # i in range(0, total_seats):
         group['quot'] = group['result'] / (group['seats'] + 1)
         index = group['quot'].idxmax(axis=0, skipna=True)
         group['seats'][index] += 1
@@ -43,7 +43,6 @@ for group_name, group in winners_grouped:
 
 parties = new.append(losers).drop('quot', axis=1).sort_values(by=['seats'], ascending=False).sort_values(by=['poll_date', 'agency'])
 
-
 # Load to postgres db
 try:
     conn = psycopg2.connect(f"host={host_aws} dbname={dbname_aws} user={user_aws} password={password_aws}")
@@ -51,10 +50,10 @@ try:
 
     # parties buffer
     party_buf = io.StringIO()
-    parties.to_csv(party_buf, index=False, header=False)
+    parties.to_csv(party_buf, sep='|',index=False, header=False)
     party_buf.seek(0)
     cur.execute('truncate table party_polls')
-    cur.copy_from(party_buf, "party_polls", sep=',')
+    cur.copy_from(party_buf, "party_polls", sep='|')
     conn.commit()
 
 # Close connections

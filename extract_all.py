@@ -23,7 +23,7 @@ cur = conn.cursor()
 for i,j in zip(range(0,len(file_paths)), range(0, len(input_dbs))):
     try:
         fout = open(file_paths[i], 'w')
-        cur.copy_to(fout, input_dbs[j], sep=',')
+        cur.copy_to(fout, input_dbs[j], sep='|')
 
     except psycopg2.DatabaseError as e:
 
@@ -43,18 +43,18 @@ if conn:
     conn.close()
 
 columns_mandaty = ['poll_date', 'poll_agency', 'party_shortname', 'result', 'coalition', 'mov_avg', 'seats']
-columns_popularity = ['poll_date', 'politician', 'approval', 'disapproval', 'party_shortname']
+columns_popularity = ['poll_date', 'politician', 'approval', 'disapproval', 'party_shortname', 'birthdate', 'birthplace', 'occupation', 'bio', 'bio_en']
 columns_list = [columns_mandaty, columns_popularity]
 
 for i,j in zip(range(0,len(file_paths)), range(0,len(columns_list))):
-    df = read_csv(file_paths[i], sep=',', names=columns_list[j])
-    df.to_csv(file_paths[i], sep=',', index=False)
+    df = read_csv(file_paths[i], sep='|', names=columns_list[j])
+    df.to_csv(file_paths[i], sep='|', index=False)
 
 # Write data to csv
-df = read_csv(file_paths[0],sep=',')
+df = read_csv(file_paths[0],sep='|')
 relevant_parties = df[(df['poll_date'] == max(df['poll_date'])) & df['result'] >= 0.02 ].party_shortname
 
 df = df[df.party_shortname.isin(relevant_parties)]
-df['result'] = df['result'].apply(lambda x: round(x, 3))
-df['mov_avg'] = df['mov_avg'].apply(lambda x: round(x, 3))
-df.to_csv(file_paths[0], sep=',', index=False)
+df['result'] = df['result'].apply(lambda x: round(x, 4))
+df['mov_avg'] = df['mov_avg'].apply(lambda x: round(x, 4))
+df.to_csv(file_paths[0], sep='|', index=False)

@@ -25,10 +25,10 @@ try:
 
     # popularity buffer
     pop_buf = io.StringIO()
-    popularity.to_csv(pop_buf, index=False, header=False)
+    popularity.to_csv(pop_buf, sep='|' ,index=False, header=False)
     pop_buf.seek(0)
     cur.execute('truncate table popularity_polls')
-    cur.copy_from(pop_buf, "popularity_polls", sep=',')
+    cur.copy_from(pop_buf, "popularity_polls", sep='|')
     conn.commit()
 
 
