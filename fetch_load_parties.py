@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 import io
 
 # Set number of seats in parliament
-total_seats = 150
+svk_seats = 150
 
 # Connect to the Google spreadsheet
 scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -19,29 +19,36 @@ worksheets = client.open('mandates-data').worksheets()
 parties_sheet = client.open('mandates-data').worksheet('parties')
 mandates = parties_sheet.get_all_records()
 parties = pd.DataFrame.from_records(mandates)
+
+# Add 5 days moving average, seats and quot columns
 parties['mov_avg'] = parties.groupby('party_shortname')['result'].transform(lambda x: x.rolling(5, 1).mean())
 parties['seats'] = 0
 parties['quot'] = 0
+
+# Split the parties according to the election thresholds (5% or 7% for a coalition)
 winners = parties[((parties['coalition'] == 1) & (parties['result'] >= 0.07)) | ((parties['coalition'] == 0) & (parties['result'] >= 0.05))]
 losers = parties[((parties['coalition'] == 1) & (parties['result'] < 0.07)) | ((parties['coalition'] == 0) & (parties['result'] < 0.05))]
+
+# Create groups in which the seats need to be distributed and a temp table for calculated results
 winners_grouped = winners.groupby(['poll_date','agency'])
 
-# Define function and distribute each seat according to the d'Hondt method
-def distribute_seats(group):
+# Define function to distribute each seat according to the d'Hondt method
+def distribute_seats(group, total_seats):
     x = 0
-    while x < total_seats: # i in range(0, total_seats):
-        group['quot'] = group['result'] / (group['seats'] + 1)
-        index = group['quot'].idxmax(axis=0, skipna=True)
-        group['seats'][index] += 1
+    while x < total_seats:
+        group.quot = group.result / (group.seats + 1)
+        index = group.quot.idxmax(axis=0, skipna=True)
+        group.seats[index] += 1
         x += 1
 
-new = pd.DataFrame(columns=['poll_date','agency', 'party_shortname', 'result', 'coalition', 'mov_avg', 'seats', 'quot'])
+temp = pd.DataFrame(columns=['poll_date','agency', 'party_shortname', 'result', 'coalition', 'mov_avg', 'seats', 'quot'])
 
+# Distribute seats in each group, add parties which didn't get to the parliament and sort
 for group_name, group in winners_grouped:
-    distribute_seats(group)
-    new = new.append(group)
+    distribute_seats(group, svk_seats)
+    temp = temp.append(group)
 
-parties = new.append(losers).drop('quot', axis=1).sort_values(by=['seats'], ascending=False).sort_values(by=['poll_date', 'agency'])
+parties = temp.append(losers).drop('quot', axis=1).sort_values(by=['seats'], ascending=False).sort_values(by=['poll_date', 'agency'])
 
 # Load to postgres db
 try:

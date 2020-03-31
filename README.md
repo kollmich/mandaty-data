@@ -3,7 +3,7 @@
 
 # Description
 
-Opinion polls ETL, using .pdf as source format and postgres database for storage.
+Opinion polls data, using Google spreadsheets for manual input and Postgres db for storage.
 
 
 # Data & Methodology
